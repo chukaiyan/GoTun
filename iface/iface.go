@@ -55,6 +55,8 @@ func (i *Iface) Start() error {
 			"mtu", strconv.Itoa(i.mtu), "up")
 	}
 
+	log.Printf("chu T9 ifconfig %s %s %s %s %s %s %s %s", i.Name(), ip.String(), ip.String(), "netmask", netmask, "mtu", strconv.Itoa(i.mtu), "up")
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("run ifconfig fail: %v, %s", err, string(output))
@@ -74,6 +76,8 @@ func (i *Iface) AddSysRoute(ip *net.IP) {
 	// log.Printf(subnet)
 	cmd := exec.Command("route", "add", "-net",
 		subnet, ip.String())
+
+	log.Printf("chu T9 route add -net %s %s", subnet, ip.String())
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

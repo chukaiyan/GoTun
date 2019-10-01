@@ -11,10 +11,11 @@ import (
 	"log"
 	"net"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/chukaiyan/GoTun/iface"
 	"github.com/chukaiyan/GoTun/protocol"
 	"github.com/chukaiyan/GoTun/utils"
-	"github.com/golang/protobuf/proto"
+
 )
 
 type ServerConn struct {
