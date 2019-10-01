@@ -40,7 +40,7 @@ func (c *Client) Start() {
 		c.conns[connIndex] = conn
 
 		go c.conns[connIndex].run()
-		ass
+		//  chukaiyan 2019-10-01
 		//time.Sleep(time.Millisecond * 100) // FIXME:
 		//go c.conns[connIndex].runRead()
 	}
