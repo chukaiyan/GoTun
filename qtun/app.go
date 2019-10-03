@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 	"sync"
-
+	"github.com/chukaiyan/GoTun/globalconfig"
 	"github.com/chukaiyan/GoTun/config"
 	"github.com/chukaiyan/GoTun/iface"
 	"github.com/chukaiyan/GoTun/protocol"
@@ -13,7 +13,7 @@ import (
 )
 
 type App struct {
-	config config.Config
+	//config config.Config
 	client *Peer
 	routes map[string]Route
 	mutex  sync.RWMutex
@@ -22,16 +22,25 @@ type App struct {
 }
 
 func NewApp(config config.Config) *App {
-	return &App{
-		config: config,
+
+	var anewapp App
+	globalconfig.Globalconfigset = config;
+	anewapp = App{
+		//config: config,
 		routes: make(map[string]Route),
 	}
+	if globalconfig.Globalconfigset.Verbose == 3 {
+		log.Printf("chuxu L3 NewApp  finished ")
+
+
+	}
+	return &anewapp; 
 }
 
 func (a *App) Run() error {
-	if a.config.ServerMode == 1 {
-		a.server = transport.NewServer(a.config.Listen, "not_use_private_address", a, a.config.Key)
-		a.server.SetConfig(a.config)
+	if globalconfig.Globalconfigset.ServerMode == 1 {
+		a.server = transport.NewServer(globalconfig.Globalconfigset.Listen, "not_use_private_address", a, globalconfig.Globalconfigset.Key)
+		a.server.SetConfig(globalconfig.Globalconfigset)
 		go a.server.Start()
 	} else {
 		err := a.InitClient()
@@ -44,7 +53,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) StartFetchTunInterface() error {
-	a.iface = iface.New("", a.config.Ip, a.config.Mtu)
+	a.iface = iface.New("", globalconfig.Globalconfigset.Ip, globalconfig.Globalconfigset.Mtu)
 	err := a.iface.Start()
 	if err != nil {
 		return err
@@ -58,7 +67,7 @@ func (a *App) StartFetchTunInterface() error {
 }
 
 func (a *App) FetchAndProcessTunPkt() error {
-	pkt := iface.NewPacketIP(a.config.Mtu)
+	pkt := iface.NewPacketIP(globalconfig.Globalconfigset.Mtu)
 	for {
 		n, err := a.iface.Read(pkt)
 		if err != nil {
@@ -67,14 +76,14 @@ func (a *App) FetchAndProcessTunPkt() error {
 		}
 		src := pkt.GetSourceIP().String()
 		dst := pkt.GetDestinationIP().String()
-		if a.config.Verbose == 1 {
+		if globalconfig.Globalconfigset.Verbose == 1 {
 			log.Printf("FetchAndProcessTunPkt::got tun packet: src=%s dst=%s len=%d", src, dst, n)
 		}
-		if a.config.ServerMode == 1 {
+		if globalconfig.Globalconfigset.ServerMode == 1 {
 			// log.Printf("FetchAndProcessTunPkt::receiver tun packet dst address  dst=%s, route_local_addr=%s", dst, a.routes[dst].LocalAddr)
 			conn := a.server.GetConnsByAddr(a.routes[dst].LocalAddr)
 			if conn == nil {
-				if a.config.Verbose == 1 {
+				if globalconfig.Globalconfigset.Verbose == 1 {
 					log.Printf("FetchAndProcessTunPkt::unknown destination, packet dropped src=%s,dst=%s", src, dst)
 				}
 			} else {
@@ -90,7 +99,7 @@ func (a *App) FetchAndProcessTunPkt() error {
 func (a *App) InitClient() error {
 	//For server no need to make connection to client -gs
 	// if a.config.ServerMode == 0 {
-	peer := NewPeer(a.config, a)
+	peer := NewPeer(globalconfig.Globalconfigset, a)
 	peer.Start()
 	a.client = peer
 	return nil
@@ -127,13 +136,13 @@ func (a *App) OnData(buf []byte, conn *net.TCPConn) {
 		}
 
 		a.server.SetConns(a.routes[ping.GetIP()].LocalAddr, conn)
-		if a.config.Verbose == 1 {
+		if globalconfig.Globalconfigset.Verbose == 1 {
 			log.Printf("OnData::routes %s", a.routes)
 		}
 		a.mutex.Unlock()
 	case *protocol.Envelope_Packet:
 		pkt := iface.PacketIP(ep.GetPacket().GetPayload())
-		if a.config.Verbose == 1 {
+		if globalconfig.Globalconfigset.Verbose == 1 {
 			log.Printf("OnData::received packet: src=%s dst=%s len=%d",
 				pkt.GetSourceIP(), pkt.GetDestinationIP(), len(pkt))
 		}
