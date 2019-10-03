@@ -142,7 +142,7 @@ func (a *App) OnData(buf []byte, conn *net.TCPConn) {
 		a.mutex.Unlock()
 	case *protocol.Envelope_Packet:
 		pkt := iface.PacketIP(ep.GetPacket().GetPayload())
-		if globalconfig.Globalconfigset.Verbose == 1 {
+		if globalconfig.Globalconfigset.Verbose == 3 {  //chuxu changed to 3
 			log.Printf("OnData::received packet: src=%s dst=%s len=%d",
 				pkt.GetSourceIP(), pkt.GetDestinationIP(), len(pkt))
 		}
